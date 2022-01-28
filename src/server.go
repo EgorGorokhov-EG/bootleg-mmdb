@@ -26,7 +26,7 @@ func main() {
 
 	initCache()
 
-	fmt.Println("Listening on port:", PORT)
+	fmt.Println("Server started on port:", PORT)
 
 	for {
 		connection, err := listener.Accept()
@@ -56,34 +56,37 @@ func handleConnection(connection net.Conn) {
 		return
 	}
 
-	requestMsg := strings.Trim(string(buffer), "\n")
-	splitRequest := strings.Split(requestMsg, " ")
+	command := strings.Trim(string(buffer), "\n")
+	splitCommand := strings.Split(command, " ")
 
-	response := handleCommand(splitRequest)
+	response := handleCommand(splitCommand)
 
 	connection.Write([]byte(response))
 }
 
 // returns respond to the given command
 func handleCommand(arguments []string) string {
-	switch arguments[0] {
-	case "set":
-		fmt.Println("SET for", arguments[1], ":", arguments[2])
-		cache[arguments[1]] = arguments[2]
-		fmt.Println(cache)
-		return arguments[1] + ":" + arguments[2] + " is set!"
-	case "get":
-		fmt.Println("GET for", arguments[1])
-		fmt.Println(cache[arguments[1]])
-		val, ok := cache[arguments[1]]
 
+	command := arguments[0]
+
+	switch command {
+	case "set":
+		key, value := arguments[1], arguments[2]
+		fmt.Println("SET for", key, "->", value)
+		cache[key] = value
+		return key + "->" + value + " is set!"
+
+	case "get":
+		key := arguments[1]
+		fmt.Println("GET for", key)
+		value, ok := cache[key]
 		if ok == false {
 			fmt.Println("Can't find the value for the given key!")
 			return "null"
 		} else {
-			return val
+			return value
 		}
 	default:
-		return "The unknown command"
+		return "Unknown command!"
 	}
 }
