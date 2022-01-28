@@ -13,7 +13,27 @@ const (
 	CONN_TYPE = "tcp"
 )
 
-var cache map[string]string
+// Global cache to store key-value pairs
+var cache Cache
+
+type Cache struct {
+	_cache map[string]string
+}
+
+func (c *Cache) initCache() {
+	c._cache = make(map[string]string)
+
+	fmt.Println("The cache created!")
+}
+
+func (c *Cache) set(key, value string) {
+	c._cache[key] = value
+}
+
+func (c *Cache) get(key string) (string, bool) {
+	value, ok := c._cache[key]
+	return value, ok
+}
 
 func main() {
 	listener, err := net.Listen(CONN_TYPE, HOST+":"+PORT)
@@ -24,7 +44,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	initCache()
+	cache.initCache()
 
 	fmt.Println("Server started on port:", PORT)
 
@@ -39,15 +59,9 @@ func main() {
 	}
 }
 
-func initCache() {
-	cache = make(map[string]string)
-
-	fmt.Println("The cache created!")
-}
-
 func handleConnection(connection net.Conn) {
 	defer connection.Close()
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 2*1024)
 
 	_, err := connection.Read(buffer)
 
@@ -73,13 +87,13 @@ func handleCommand(arguments []string) string {
 	case "set":
 		key, value := arguments[1], arguments[2]
 		fmt.Println("SET for", key, "->", value)
-		cache[key] = value
+		cache.set(key, value)
 		return key + "->" + value + " is set!"
 
 	case "get":
 		key := arguments[1]
 		fmt.Println("GET for", key)
-		value, ok := cache[key]
+		value, ok := cache.get(key)
 		if ok == false {
 			fmt.Println("Can't find the value for the given key!")
 			return "null"
