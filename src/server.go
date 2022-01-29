@@ -16,25 +16,6 @@ const (
 // Global cache to store key-value pairs
 var cache Cache
 
-type Cache struct {
-	_cache map[string]string
-}
-
-func (c *Cache) initCache() {
-	c._cache = make(map[string]string)
-
-	fmt.Println("The cache created!")
-}
-
-func (c *Cache) set(key, value string) {
-	c._cache[key] = value
-}
-
-func (c *Cache) get(key string) (string, bool) {
-	value, ok := c._cache[key]
-	return value, ok
-}
-
 func main() {
 	listener, err := net.Listen(CONN_TYPE, HOST+":"+PORT)
 	defer listener.Close()
@@ -78,7 +59,7 @@ func handleConnection(connection net.Conn) {
 	connection.Write([]byte(response))
 }
 
-// returns respond to the given command
+// returns respond for the given command
 func handleCommand(arguments []string) string {
 
 	command := arguments[0]
