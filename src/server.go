@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 )
 
 const (
@@ -59,7 +60,10 @@ func handleConnection(connection net.Conn) {
 		return
 	}
 
-	query := strings.Trim(string(buffer), "\n")
+	//query := strings.Trim(string(buffer), "\n")
+	query := strings.TrimFunc(string(buffer), func(r rune) bool {
+		return !unicode.IsGraphic(r)
+	})
 	queryArray := strings.Split(query, " ")
 
 	response := processQuery(queryArray)
@@ -82,6 +86,7 @@ func processQuery(query []string) string {
 
 	case "get":
 		key := query[1]
+		fmt.Printf("%s.", key)
 		fmt.Println("GET for", key)
 		value, ok := cache.get(key)
 		if ok == false {
