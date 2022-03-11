@@ -39,6 +39,8 @@ func main() {
 
 	logger.Println("Server started on port:", PORT)
 
+	go startPersistence()
+
 	for {
 		connection, err := listener.Accept()
 		if err != nil {
@@ -60,10 +62,11 @@ func handleConnection(connection net.Conn) {
 		return
 	}
 
-	//query := strings.Trim(string(buffer), "\n")
+	// Clear raw input command
 	query := strings.TrimFunc(string(buffer), func(r rune) bool {
 		return !unicode.IsGraphic(r)
 	})
+
 	queryArray := strings.Split(query, " ")
 
 	response := processQuery(queryArray)
@@ -86,7 +89,6 @@ func processQuery(query []string) string {
 
 	case "get":
 		key := query[1]
-		fmt.Printf("%s.", key)
 		fmt.Println("GET for", key)
 		value, ok := cache.get(key)
 		if ok == false {
@@ -117,7 +119,15 @@ type Aof struct {
 }
 
 func (aof *Aof) init() {
-	aof.path = "/tmp/bootleg-mmdb-persistence/aof.pers"
+
+	aofName := "aof.pers"
+	aofDirectory := "./tmp/bootleg-mmdb-persistence/"
+	err := os.MkdirAll(aofDirectory, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	aof.path = aofDirectory + aofName
 	aof.aofBuf = ""
 	aof.aofLock = new(sync.Mutex)
 	aof.logger = log.New(os.Stdout, "aof-logger", log.LstdFlags)
